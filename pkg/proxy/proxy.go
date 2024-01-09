@@ -32,10 +32,6 @@ func NewProxy(name string, config *config.Proxy, middlewares map[string]*config.
 		return nil, err
 	}
 
-	if err := chain.Assemble(); err != nil {
-		return nil, err
-	}
-
 	logger.Debug("Setting entypoint")
 	entrypoint, err := NewEntrypoint(config.Entrypoint, chain.Start())
 	if err != nil {

@@ -36,7 +36,12 @@ func NewChain(middleares []string, configs map[string]*config.Middleware, end ht
 		constructors = append(constructors, constructor)
 	}
 
-	return &Chain{constructors: constructors, end: end}, nil
+	chain := &Chain{constructors, nil, end}
+	if err := chain.assemble(); err != nil {
+		return nil, err
+	}
+
+	return chain, nil
 }
 
 func buildConstructor(name string, cfg *config.Middleware) (Constructor, error) {
@@ -79,14 +84,10 @@ func buildConstructor(name string, cfg *config.Middleware) (Constructor, error) 
 	return nil, fmt.Errorf("'%s' unkown middleware type", name)
 }
 
-func (c *Chain) Start() http.Handler {
-	return c.start
-}
-
-func (c *Chain) Assemble() error {
+func (c *Chain) assemble() error {
 	var err error
 	next := c.end
-	for i := len(c.constructors) - 1; 1 >= 0; i-- {
+	for i := len(c.constructors) - 1; i >= 0; i-- {
 		next, err = c.constructors[i](next)
 		if err != nil {
 			return err
@@ -96,16 +97,13 @@ func (c *Chain) Assemble() error {
 	return nil
 }
 
-func (c Chain) Append(constructors ...Constructor) (Chain, error) {
-	newCons := make([]Constructor, 0, len(c.constructors)+len(constructors))
-	newCons = append(newCons, c.constructors...)
-	newCons = append(newCons, constructors...)
-
-	chain := Chain{constructors: newCons, end: c.end}
-	err := chain.Assemble()
-	return chain, err
+func (c *Chain) Start() http.Handler {
+	return c.start
 }
 
-func (c Chain) Extend(chain Chain) (Chain, error) {
-	return c.Append(chain.constructors...)
+func (c *Chain) Append(constructors ...Constructor) error {
+	c.constructors = append(c.constructors, constructors...)
+
+	err := c.assemble()
+	return err
 }

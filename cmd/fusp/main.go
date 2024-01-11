@@ -5,7 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	
+	"time"
+
 	"github.com/Klapstuhl/fusp/pkg/config"
 	"github.com/Klapstuhl/fusp/pkg/log"
 	"github.com/Klapstuhl/fusp/pkg/proxy"
@@ -56,4 +57,11 @@ func main() {
 	}()
 
 	<-ctx.Done()
+	ctx, cancle = context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancle()
+	for _, proxy := range proxies {
+		if err := proxy.Shutdown(ctx); err != nil {
+			logrus.WithError(err).WithField("proxy", proxy.Name).Error("failed to shutdown")
+		}
 	}
+}

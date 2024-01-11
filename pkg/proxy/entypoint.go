@@ -23,7 +23,7 @@ func NewEntrypoint(config *config.Entrypoint, handler http.Handler) (*Entrypoint
 	} else if config.Type == "http" {
 		network = "tcp"
 	} else {
-		return nil, fmt.Errorf("Unknown entrypoint type: %q", config.Type)
+		return nil, fmt.Errorf("unknown entrypoint type: %q", config.Type)
 	}
 
 	listener, err := net.Listen(network, config.Address)

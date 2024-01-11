@@ -15,19 +15,14 @@ type Chain struct {
 	end          http.Handler
 }
 
-func NewChain(middleares []string, configs map[string]*config.Middleware, end http.Handler) (*Chain, error) {
+func NewChain(middleares map[string]*config.Middleware, end http.Handler) (*Chain, error) {
 	if end == nil {
 		return nil, fmt.Errorf("invalid chain end handler")
 	}
 
 	constructors := make([]Constructor, 0)
 
-	for _, name := range middleares {
-		cfg, ok := configs[name]
-		if !ok {
-			return nil, fmt.Errorf("unknown middleware '%s'", name)
-		}
-
+	for name, cfg := range middleares {
 		constructor, err := buildConstructor(name, cfg)
 		if err != nil {
 			return nil, err

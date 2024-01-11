@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,7 +10,7 @@ import (
 )
 
 func Read() (*Config, error) {
-	var cfg Config
+	var cfg config
 
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/etc/fusp/")
@@ -41,21 +42,57 @@ func Read() (*Config, error) {
 		return nil, err
 	}
 
-	return &cfg, nil
+	return cfg.toRuntime()
 }
 
-type Config struct {
+type config struct {
 	Proxies    map[string]*Proxy
 	Middleware map[string]*Middleware
 	Sockets    map[string]*Socket
 	Log        Log
-	Providers  *Provider
+}
+
+func (cfg *config) toRuntime() (*Config, error) {
+	proxies := make(map[string]*RuntimeProxyConfig)
+
+	for name, proxy := range cfg.Proxies {
+		socket, ok := cfg.Sockets[proxy.Socket]
+		if !ok {
+			return nil, fmt.Errorf("unkown socket %s", proxy.Socket)
+		}
+
+		middleware := make(map[string]*Middleware)
+
+		for _, mName := range proxy.Middleware {
+			mCfg, ok := cfg.Middleware[mName]
+			if !ok {
+				return nil, fmt.Errorf("unkown middleware %s", mName)
+			}
+
+			middleware[mName] = mCfg
+		}
+
+		proxies[name] = &RuntimeProxyConfig{proxy.Entrypoint, socket.Path, middleware}
+	}
+
+	return &Config{proxies, cfg.Log}, nil
+}
+
+type Config struct {
+	Proxies map[string]*RuntimeProxyConfig
+	Log     Log
 }
 
 type Proxy struct {
 	Entrypoint *Entrypoint
 	Socket     string
 	Middleware []string
+}
+
+type RuntimeProxyConfig struct {
+	Entrypoint *Entrypoint
+	Socket     string
+	Middleware map[string]*Middleware
 }
 
 type Entrypoint struct {
@@ -112,10 +149,10 @@ type Log struct {
 	FilePath string
 }
 
-type Provider struct {
-	File *FileProvider
-}
+// type Provider struct {
+// 	File *FileProvider
+// }
 
-type FileProvider struct {
-	Directory string
-}
+// type FileProvider struct {
+// 	Directory string
+// }

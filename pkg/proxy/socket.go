@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func NewSocket(path string, location string) (http.Handler, error) {
+func NewSocket(path string) (http.Handler, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func NewSocket(path string, location string) (http.Handler, error) {
 
 	director := func(req *http.Request) {
 		req.URL.Scheme = "http"
-		req.URL.Host = location
+		req.URL.Host = " "
 	}
 
 	socket := httputil.ReverseProxy{

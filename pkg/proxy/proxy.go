@@ -9,36 +9,35 @@ import (
 )
 
 type Proxy struct {
-	Name   string
-	config *config.Proxy
-
+	Name       string
+	socketPath string
 	entrypoint *Entrypoint
 
 	chain *middleware.Chain
 }
 
-func NewProxy(name string, config *config.Proxy, middlewares map[string]*config.Middleware) (*Proxy, error) {
+func NewProxy(name string, cfg *config.RuntimeProxyConfig) (*Proxy, error) {
 	logger := logrus.WithField("proxy", name)
 
 	logger.Debug("Creating Socket")
-	socket, err := NewSocket(config.Socket, name)
+	socket, err := NewSocket(cfg.Socket)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Debug("Creating Chain")
-	chain, err := middleware.NewChain(config.Middleware, middlewares, socket)
+	chain, err := middleware.NewChain(cfg.Middleware, socket)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Debug("Setting entypoint")
-	entrypoint, err := NewEntrypoint(config.Entrypoint, chain.Start())
+	entrypoint, err := NewEntrypoint(cfg.Entrypoint, chain.Start())
 	if err != nil {
 		return nil, err
 	}
 
-	return &Proxy{Name: name, config: config, entrypoint: entrypoint, chain: chain}, nil
+	return &Proxy{Name: name, socketPath: cfg.Socket, entrypoint: entrypoint, chain: chain}, nil
 }
 
 func (p *Proxy) Start(ctx context.Context) {

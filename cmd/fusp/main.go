@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
+	
 	"github.com/Klapstuhl/fusp/pkg/config"
 	"github.com/Klapstuhl/fusp/pkg/log"
 	"github.com/Klapstuhl/fusp/pkg/proxy"
@@ -27,7 +27,7 @@ func main() {
 	proxies := make([]*proxy.Proxy, 0)
 
 	for proxyName, proxyCfg := range cfg.Proxies {
-		proxy, err := proxy.NewProxy(proxyName, proxyCfg, cfg.Middleware)
+		proxy, err := proxy.NewProxy(proxyName, proxyCfg)
 		if err != nil {
 			logrus.WithField("proxy", proxyName).Error(err)
 			continue
@@ -56,4 +56,4 @@ func main() {
 	}()
 
 	<-ctx.Done()
-}
+	}

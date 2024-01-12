@@ -11,7 +11,7 @@ import (
 type MethodFilter struct {
 	name      string
 	methods   []string
-	blocklist bool
+	allowlist bool
 	next      http.Handler
 }
 
@@ -25,18 +25,10 @@ func (f *MethodFilter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return false
 	}()
 
-	if match {
-		if f.blocklist {
-			f.block(w, req)
-		} else {
-			f.next.ServeHTTP(w, req)
-		}
+	if (f.allowlist && match) || (!f.allowlist && !match) {
+		f.next.ServeHTTP(w, req)
 	} else {
-		if f.blocklist {
-			f.next.ServeHTTP(w, req)
-		} else {
-			f.block(w, req)
-		}
+		f.block(w, req)
 	}
 }
 
@@ -48,5 +40,5 @@ func (f *MethodFilter) block(w http.ResponseWriter, req *http.Request) {
 }
 
 func NewMethodFilter(cfg config.MethodFilter, name string, next http.Handler) (http.Handler, error) {
-	return &MethodFilter{name: name, methods: cfg.Methods, blocklist: cfg.Block, next: next}, nil
+	return &MethodFilter{name: name, methods: cfg.Methods, allowlist: cfg.Allowlist, next: next}, nil
 }

@@ -12,25 +12,18 @@ type IPFilter struct {
 	name      string
 	strategy  ip.Strategy
 	ipList    *ip.List
-	blocklist bool
+	allowlist bool
 	next      http.Handler
 }
 
 func (f *IPFilter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ip := f.strategy.GetIP(req)
+	match := f.ipList.Contains(ip)
 
-	if f.ipList.Contains(ip) {
-		if f.blocklist {
-			f.block(w, req, ip)
-		} else {
-			f.next.ServeHTTP(w, req)
-		}
+	if (f.allowlist && match) || (!f.allowlist && !match) {
+		f.next.ServeHTTP(w, req)
 	} else {
-		if f.blocklist {
-			f.next.ServeHTTP(w, req)
-		} else {
-			f.block(w, req, ip)
-		}
+		f.block(w, req, ip)
 	}
 }
 
@@ -62,7 +55,7 @@ func NewIPFilter(cfg config.IPFilter, name string, next http.Handler) (http.Hand
 		name:      name,
 		strategy:  strategy,
 		ipList:    ipList,
-		blocklist: cfg.Block,
+		allowlist: cfg.Allowlist,
 		next:      next,
 	}, nil
 }

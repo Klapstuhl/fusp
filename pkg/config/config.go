@@ -118,12 +118,12 @@ type AddPrefix struct {
 }
 
 type EndpointFilter struct {
-	Block     bool
+	Allowlist bool
 	Endpoints []string
 }
 
 type IPFilter struct {
-	Block       bool
+	Allowlist   bool
 	Addresses   []string
 	ExcludedIPs []string
 	Depth       int
@@ -131,8 +131,8 @@ type IPFilter struct {
 }
 
 type MethodFilter struct {
-	Block   bool
-	Methods []string
+	Allowlist bool
+	Methods   []string
 }
 
 type ReplacePath struct {

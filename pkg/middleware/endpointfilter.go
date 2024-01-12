@@ -10,7 +10,7 @@ import (
 type endpointFilter struct {
 	name      string
 	endpoints []string
-	blocklist bool
+	allowlist bool
 	next      http.Handler
 }
 
@@ -24,18 +24,10 @@ func (f *endpointFilter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return false
 	}()
 
-	if match {
-		if f.blocklist {
-			f.block(w, req)
-		} else {
-			f.next.ServeHTTP(w, req)
-		}
+	if (f.allowlist && match) || (!f.allowlist && !match) {
+		f.next.ServeHTTP(w, req)
 	} else {
-		if f.blocklist {
-			f.next.ServeHTTP(w, req)
-		} else {
-			f.block(w, req)
-		}
+		f.block(w, req)
 	}
 }
 
@@ -48,5 +40,5 @@ func (f *endpointFilter) block(w http.ResponseWriter, req *http.Request) {
 }
 
 func NewEndpointFilter(cfg config.EndpointFilter, name string, next http.Handler) (http.Handler, error) {
-	return &endpointFilter{name: name, endpoints: cfg.Endpoints, blocklist: cfg.Block, next: next}, nil
+	return &endpointFilter{name: name, endpoints: cfg.Endpoints, allowlist: cfg.Allowlist, next: next}, nil
 }

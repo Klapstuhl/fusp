@@ -20,7 +20,7 @@ func Read() (*Config, error) {
 		return nil, err
 	}
 
-	err := filepath.WalkDir("./config.d/", func(path string, entry os.DirEntry, err error) error {
+	err := filepath.WalkDir("/etc/fusp/config.d/", func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -46,14 +46,14 @@ func Read() (*Config, error) {
 }
 
 type config struct {
-	Proxies    map[string]*Proxy
+	Proxies    map[string]*proxy
 	Middleware map[string]*Middleware
 	Sockets    map[string]*Socket
 	Log        Log
 }
 
 func (cfg *config) toRuntime() (*Config, error) {
-	proxies := make(map[string]*RuntimeProxyConfig)
+	proxies := make(map[string]*Proxy)
 
 	for name, proxy := range cfg.Proxies {
 		socket, ok := cfg.Sockets[proxy.Socket]
@@ -72,24 +72,24 @@ func (cfg *config) toRuntime() (*Config, error) {
 			middleware[mName] = mCfg
 		}
 
-		proxies[name] = &RuntimeProxyConfig{proxy.Entrypoint, socket.Path, middleware}
+		proxies[name] = &Proxy{proxy.Entrypoint, socket.Path, middleware}
 	}
 
 	return &Config{proxies, cfg.Log}, nil
 }
 
 type Config struct {
-	Proxies map[string]*RuntimeProxyConfig
+	Proxies map[string]*Proxy
 	Log     Log
 }
 
-type Proxy struct {
+type proxy struct {
 	Entrypoint *Entrypoint
 	Socket     string
 	Middleware []string
 }
 
-type RuntimeProxyConfig struct {
+type Proxy struct {
 	Entrypoint *Entrypoint
 	Socket     string
 	Middleware map[string]*Middleware

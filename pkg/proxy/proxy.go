@@ -16,7 +16,7 @@ type Proxy struct {
 	chain *middleware.Chain
 }
 
-func NewProxy(name string, cfg *config.RuntimeProxyConfig) (*Proxy, error) {
+func NewProxy(name string, cfg *config.Proxy) (*Proxy, error) {
 	logger := logrus.WithField("proxy", name)
 
 	logger.Debug("Creating Socket")

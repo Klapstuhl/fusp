@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/Klapstuhl/fusp/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -9,7 +11,7 @@ import (
 
 type endpointFilter struct {
 	name      string
-	endpoints []string
+	endpoints []*regexp.Regexp
 	allowlist bool
 	next      http.Handler
 }
@@ -17,7 +19,7 @@ type endpointFilter struct {
 func (f *endpointFilter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	match := func() bool {
 		for _, endpoint := range f.endpoints {
-			if endpoint == req.URL.String() {
+			if endpoint.MatchString(req.URL.String()) {
 				return true
 			}
 		}
@@ -40,5 +42,15 @@ func (f *endpointFilter) block(w http.ResponseWriter, req *http.Request) {
 }
 
 func NewEndpointFilter(cfg config.EndpointFilter, name string, next http.Handler) (http.Handler, error) {
-	return &endpointFilter{name: name, endpoints: cfg.Endpoints, allowlist: cfg.Allowlist, next: next}, nil
+	endpoints := make([]*regexp.Regexp, 0)
+	for _, endpoint := range cfg.Endpoints {
+		reg, err := regexp.Compile(endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("middleware: %s: invalid regexp, %v", name, err)
+		}
+
+		endpoints = append(endpoints, reg)
+	}
+
+	return &endpointFilter{name: name, endpoints: endpoints, allowlist: cfg.Allowlist, next: next}, nil
 }

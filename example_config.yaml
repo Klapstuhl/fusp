@@ -1,0 +1,46 @@
+proxies:
+  proxy1:
+    entrypoint:
+      type: unix
+      address: /tmp/proxy1.sock
+    socket: podman-user
+    middleware:
+      - podman-methods
+      - podman-endpoints
+
+  proxy2:
+    entrypoint:
+      address: 0.0.0.0:4523
+      type: http
+    socket: podman-user
+    middleware:
+      - ipfilter
+
+middleware:
+  podman-methods:
+    methodFilter:
+      allowlist: true
+      methods:
+        - GET
+        - POST
+
+  podman-endpoints:
+    endpointFilter:
+      allowlist: false
+      endpoints:
+        - /images/.*/json
+        - /images/json
+  
+  ipfilter:
+    ipFilter:
+      allowlist: true
+      addresses:
+        - "192.168.0.1/24"
+
+sockets:
+  podman-user:
+    path: /run/user/1000/podman/podman.sock
+
+logging:
+  level: info
+  filePath: stdout

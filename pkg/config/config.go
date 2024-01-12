@@ -34,7 +34,7 @@ func Read() (*Config, error) {
 		}
 		return nil
 	})
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 

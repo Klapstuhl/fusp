@@ -37,7 +37,7 @@ func main() {
 	}
 
 	for _, proxy := range proxies {
-		go proxy.Start(ctx)
+		go proxy.Start()
 	}
 
 	sigChan := make(chan os.Signal, 1)

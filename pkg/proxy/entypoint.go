@@ -37,7 +37,7 @@ func NewEntrypoint(config *config.Entrypoint, handler http.Handler) (*Entrypoint
 	return &Entrypoint{server: server, listener: listener}, nil
 }
 
-func (e *Entrypoint) Strat(ctx context.Context) {
+func (e *Entrypoint) Strat() {
 	e.server.Serve(e.listener)
 }
 

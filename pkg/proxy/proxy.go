@@ -40,9 +40,9 @@ func NewProxy(name string, cfg *config.Proxy) (*Proxy, error) {
 	return &Proxy{Name: name, socketPath: cfg.Socket, entrypoint: entrypoint, chain: chain}, nil
 }
 
-func (p *Proxy) Start(ctx context.Context) {
+func (p *Proxy) Start() {
 	logrus.WithField("proxy", p.Name).Debug("Proxy started")
-	p.entrypoint.Strat(ctx)
+	p.entrypoint.Strat()
 }
 
 func (p *Proxy) Close() {
